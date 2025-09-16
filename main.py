@@ -3,6 +3,7 @@ import logging
 import sys
 import sqlite3
 import re
+import os
 
 from aiogram import Bot, Dispatcher, Router, F, html
 from aiogram.client.default import DefaultBotProperties
@@ -13,10 +14,12 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from datetime import datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from config import BOT_TOKEN
+from dotenv import load_dotenv
 from utilities import get_keyboard, all_deadlines
 from sheets import get_all_records, add_row
 
+load_dotenv()
+BOT_TOKEN = os.getenv('BOT_TOKEN')
 
 dp = Dispatcher()
 router = Router()
