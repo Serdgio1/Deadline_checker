@@ -29,3 +29,15 @@ def get_all_records(retries=3):
                 pass
             else:
                 return None
+def delete_row(row_number, retries=3):
+    for attempt in range(retries):
+        try:
+            worksheet.delete_rows(row_number)
+            print(f"Row {row_number} deleted from 'Deadline_checker'")
+            return True
+        except (gspread.exceptions.APIError, TransportError) as e:
+            print(f"Attempt {attempt+1} failed: {e}")
+            if attempt < retries - 1:
+                pass
+            else:
+                return False

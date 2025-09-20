@@ -2,14 +2,16 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 
 
-def get_keyboard():
-        menu_keyboard = InlineKeyboardMarkup(
-             inline_keyboard=[
-                [InlineKeyboardButton(text='Deadlines',callback_data='deadlines')],
-                [InlineKeyboardButton(text='See my points',callback_data='points')]
-            ]
-        )
-        return menu_keyboard
+def get_keyboard(buttons):
+    keyboard = []
+    for btn in buttons:
+        if isinstance(btn, (list, tuple)) and len(btn) == 2:
+            text, cb_data = btn
+        else:
+            text, cb_data = str(btn), str(btn)
+        keyboard.append([InlineKeyboardButton(text=text, callback_data=cb_data)])
+    menu_keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard)
+    return menu_keyboard
 
 def all_deadlines(records):
     res = ''
