@@ -73,6 +73,12 @@ async def check_deadlines():
 async def command_start_handler(message: Message) -> None:
     await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!",reply_markup=get_keyboard([('Deadlines','deadlines'),('See my points','points'),('Notifications','notify')]))
 
+@dp.callback_query(F.data=='points')
+async def points_handler(callback: CallbackQuery):
+    await callback.message.delete()
+    await callback.message.answer("That doesn't work. Wait for a new release.")
+    await callback.answer()
+
 @dp.callback_query(F.data=='deadlines')
 async def deadlines_handler(callback: CallbackQuery):
     text = all_deadlines(get_all_records())
