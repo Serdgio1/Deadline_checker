@@ -1,5 +1,6 @@
 import gspread
 from google.auth.exceptions import TransportError
+from datetime import datetime
 
 gc = gspread.service_account(filename='.config/gspread/credentials.json')
 sh = gc.open("Deadline_checker")
@@ -22,7 +23,7 @@ def get_all_records(retries=3):
     for attempt in range(retries):
         try:
             records = worksheet.get_all_records()
-            return records
+            return sorted(records, key=lambda r: datetime.strptime(r["Deadline"], "%d.%m.%Y"))
         except (gspread.exceptions.APIError, TransportError) as e:
             print(f"Attempt {attempt+1} failed: {e}")
             if attempt < retries - 1:

@@ -83,7 +83,7 @@ async def points_handler(callback: CallbackQuery):
 async def deadlines_handler(callback: CallbackQuery):
     text = all_deadlines(get_all_records())
     await callback.message.delete()
-    await callback.message.answer(f"Here are your deadlines:\n{text}")
+    await callback.message.answer(f"Here are your deadlines:\n{text}", html_preview=False)
     await callback.answer()
 
 @dp.callback_query(F.data=='notify')
