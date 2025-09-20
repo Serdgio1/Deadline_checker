@@ -18,6 +18,6 @@ def all_deadlines(records):
     count = 0
     for record in records:
           count += 1
-          res += f'{count} {str(record['Deadline'])} {record['Name']} {record['Link']}\n'
+          res += f"{count}. {str(record['Deadline'])} {record['Name']} {record['Link']}\n"
     return res
 
