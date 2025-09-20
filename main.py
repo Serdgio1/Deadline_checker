@@ -135,7 +135,7 @@ async def process_notification(message: Message, state: FSMContext):
 
 async def main():
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(check_deadlines, "interval", hour=24)  # check every day
+    scheduler.add_job(check_deadlines, "interval", hours=24)  # check every day
     scheduler.start()
     await dp.start_polling(bot)
 
