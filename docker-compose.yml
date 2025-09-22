@@ -6,4 +6,4 @@ services:
     image: deadline_checker:latest
     restart: unless-stopped
     volumes:
-      - .:/app   # optional: for development (live code reload inside container)
+      - .:/app   

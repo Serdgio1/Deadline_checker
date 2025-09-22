@@ -13,11 +13,20 @@ def get_keyboard(buttons):
     menu_keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard)
     return menu_keyboard
 
-def all_deadlines(records):
+def all_deadlines(records, fields=['Deadline', 'Name', 'Link']):
     res = ''
-    count = 0
+    count = 1
     for record in records:
-          count += 1
-          res += f"{count}. {str(record['Deadline'])} {record['Name']} {record['Link']}\n"
+        values = []
+        f = 1
+        for field in fields:
+            if record.get(field, '') == '':
+                f = 0
+                continue
+            values.append(str(record.get(field, '')))
+        if f == 1:
+            res += f"{count}. {' '.join(values)}\n"
+            count += 1
     return res
+
 

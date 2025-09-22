@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from pydoc import text
 import sys
 import sqlite3
 import re
@@ -30,6 +31,9 @@ class DeadlineForm(StatesGroup):
 
 class NotificationForm(StatesGroup):
     waiting_for_notification = State()
+
+class AllNotify(StatesGroup):
+    all_notify = State()
 
 async def check_deadlines():
     records = get_all_records()
@@ -71,7 +75,7 @@ async def check_deadlines():
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
-    await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!",reply_markup=get_keyboard([('Deadlines','deadlines'),('See my points','points'),('Notifications','notify')]))
+    await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!",reply_markup=get_keyboard([('Deadlines','deadlines'),('See my points','points'),('Notifications','notify'),('Pass','pass')]))
 
 @dp.callback_query(F.data=='points')
 async def points_handler(callback: CallbackQuery):
@@ -92,6 +96,14 @@ async def notify_handler(callback: CallbackQuery, state: FSMContext):
     await state.set_state(NotificationForm.waiting_for_notification)
     await callback.answer()
 
+@dp.callback_query(F.data=='pass')
+async def pass_task(callback: CallbackQuery):
+    text = all_deadlines(get_all_records(),['Name','Pass'])
+    await callback.message.delete()
+    await callback.message.answer(f"Here are your passes:\n{text}")
+    await callback.answer()
+
+
 
 # Helper function to check if user is admin
 def is_admin(chat_id):
@@ -106,6 +118,12 @@ async def add_deadline_handler(message: Message, state: FSMContext):
         return
     await message.answer("Please enter the deadline: (DD.MM.YYYY) Subject Link")
     await state.set_state(DeadlineForm.waiting_for_deadline)
+
+@dp.message(F.text=='/all')
+async def message_to_all(message: Message, state: FSMContext):
+    if is_admin(message.chat.id):
+        await message.answer(text="Type a message to all users")
+        await state.set_state(AllNotify.all_notify)
 
 @dp.message(DeadlineForm.waiting_for_deadline)
 async def process_deadline(message: Message, state: FSMContext):
@@ -131,6 +149,19 @@ async def process_notification(message: Message, state: FSMContext):
         await message.answer("Notifications enabled. You will receive reminders about upcoming deadlines.")
     else:
         await message.answer("Notifications not enabled. You can enable them later by clicking the 'Notifications' button.")
+    await state.clear()
+
+@dp.message(AllNotify.all_notify)
+async def process_all_notify(message: Message, state: FSMContext):
+    if is_admin(message.chat.id):
+        text = message.text.strip()
+        cursor.execute("SELECT chat_id FROM users")
+        chat_ids = [row[0] for row in cursor.fetchall() if row[0]]
+        for chat_id in chat_ids:
+            await bot.send_message(chat_id=chat_id, text=text)
+        await message.answer("Message sent to all users.")
+    else:
+        await message.answer("You do not have permission to send messages to all users.")
     await state.clear()
 
 async def main():
