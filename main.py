@@ -100,7 +100,7 @@ async def notify_handler(callback: CallbackQuery, state: FSMContext):
 async def pass_task(callback: CallbackQuery):
     text = all_deadlines(get_all_records(),['Name','Pass'])
     await callback.message.delete()
-    await callback.message.answer(f"Here are your passes:\n{text}")
+    await callback.message.answer(f"Here are your works to pass:\n{text}")
     await callback.answer()
 
 
