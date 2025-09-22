@@ -1,0 +1,9 @@
+
+services:
+  deadline_checker:
+    build: .
+    container_name: deadline_checker_container
+    image: deadline_checker:latest
+    restart: unless-stopped
+    volumes:
+      - .:/app   
