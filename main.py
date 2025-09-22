@@ -75,7 +75,7 @@ async def check_deadlines():
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
-    await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!",reply_markup=get_keyboard([('Deadlines','deadlines'),('See my points','points'),('Notifications','notify'),('Pass','pass')]))
+    await message.answer(f"Hello, {html.bold(html.quote(message.from_user.full_name))}!",reply_markup=get_keyboard([('Deadlines','deadlines'),('See my points','points'),('Notifications','notify'),('Pass','pass')]))
 
 @dp.callback_query(F.data=='points')
 async def points_handler(callback: CallbackQuery):
