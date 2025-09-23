@@ -38,6 +38,7 @@ class AllNotify(StatesGroup):
 async def check_deadlines():
     records = get_all_records()
     today = datetime.today().date()
+    now = datetime.now()
     cursor.execute("SELECT chat_id FROM users")
     chat_ids = [row[0] for row in cursor.fetchall() if row[0]]
     for i, record in enumerate(records, start=2):
@@ -45,31 +46,37 @@ async def check_deadlines():
             # Assuming date is stored in column "Deadline" as "DD.MM.YYYY"
             deadline_date = datetime.strptime(record["Deadline"], "%d.%m.%Y").date()
             name = record.get("Name", "No description")
+            if now.time().hour == 12 and now.time().minute >= 0:
+                # Remind 7 days before
+                if deadline_date - today == timedelta(days=7):
+                    for chat_id in chat_ids:
+                        await bot.send_message(
+                            chat_id=chat_id,
+                            text=f"Reminder: 1 week left until {deadline_date} — {name}"
+                        )
 
-            # Remind 7 days before
-            if deadline_date - today == timedelta(days=7):
-                for chat_id in chat_ids:
-                    await bot.send_message(
-                        chat_id=chat_id,
-                        text=f"Reminder: 1 week left until {deadline_date} — {name}"
-                    )
+                # Remind 1 day before
+                if deadline_date - today == timedelta(days=1):
+                    for chat_id in chat_ids:
+                        await bot.send_message(
+                            chat_id=chat_id,
+                            text=f"Reminder: Tomorrow is the deadline {deadline_date} — {name}"
+                        )
 
-            # Remind 1 day before
-            if deadline_date - today == timedelta(days=1):
-                for chat_id in chat_ids:
-                    await bot.send_message(
-                        chat_id=chat_id,
-                        text=f"Reminder: Tomorrow is the deadline {deadline_date} — {name}"
-                    )
-
-            elif deadline_date == today:
-                for chat_id in chat_ids:
-                    await bot.send_message(
-                        chat_id=chat_id,
-                        text=f"Deadline today: {deadline_date} — {name}\n❌ It will now be removed from the list."
-                    )
-                delete_row(i)
-
+                elif deadline_date == today:
+                    for chat_id in chat_ids:
+                        await bot.send_message(
+                            chat_id=chat_id,
+                            text=f"Deadline today: {deadline_date} — {name}"
+                        )
+                    delete_row(i)
+                elif today - deadline_date == timedelta(days=1):
+                    for chat_id in chat_ids:
+                        await bot.send_message(
+                            chat_id=chat_id,
+                            text=f"Reminder: Yesterday was the deadline {deadline_date.date()} — {name}\n It will delete now"
+                        )
+                    delete_row(i)
         except Exception as e:
             print("Error parsing record:", record, e)
 
@@ -166,7 +173,7 @@ async def process_all_notify(message: Message, state: FSMContext):
 
 async def main():
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(check_deadlines, "interval", hours=24)  # check every day
+    scheduler.add_job(check_deadlines, "interval", hours = 1)  # check every day
     scheduler.start()
     await dp.start_polling(bot)
 
