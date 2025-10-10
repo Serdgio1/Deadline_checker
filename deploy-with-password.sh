@@ -3,7 +3,7 @@
 # Deadline Checker Bot - Password-based Deployment Script
 # This script deploys the bot using password authentication
 
-echo "🚀 Deadline Checker Bot - Password Deployment"
+echo "Deadline Checker Bot - Password Deployment"
 echo "=============================================="
 
 # Configuration - UPDATE THESE VALUES FOR YOUR SERVER
@@ -101,7 +101,7 @@ print_status "Step 7: Showing recent logs..."
 ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST "cd $SERVER_PATH && docker-compose logs --tail=20"
 
 echo ""
-print_success "🎉 Deployment completed!"
+print_success "Deployment completed!"
 echo ""
 print_status "Useful commands for server management:"
 echo "  View logs:      ssh $SERVER_USER@$SERVER_HOST 'cd $SERVER_PATH && docker-compose logs -f'"
