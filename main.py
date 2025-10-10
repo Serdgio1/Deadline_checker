@@ -93,7 +93,6 @@ Hello, {html.bold(html.quote(message.from_user.full_name))}!
 1. Click "Notifications" to enable reminders
 2. Click "Deadlines" to see all tasks
 
-
 <i>I'll remind you 7 days before, 1 day before, on the deadline day, and delete expired tasks automatically.</i>
 """
     await message.answer(welcome_text, reply_markup=get_keyboard([('Deadlines','deadlines'),('See my points','points'),('Notifications','notify'),('Pass','pass')]))
