@@ -38,7 +38,6 @@ class AllNotify(StatesGroup):
 async def check_deadlines():
     records = get_all_records()
     today = datetime.today().date()
-    now = datetime.now()
     cursor.execute("SELECT chat_id FROM users")
     chat_ids = [row[0] for row in cursor.fetchall() if row[0]]
     for i, record in enumerate(records, start=2):
@@ -46,43 +45,60 @@ async def check_deadlines():
             # Assuming date is stored in column "Deadline" as "DD.MM.YYYY"
             deadline_date = datetime.strptime(record["Deadline"], "%d.%m.%Y").date()
             name = record.get("Name", "No description")
-            if now.time().hour == 12 and now.time().minute >= 0:
-                # Remind 7 days before
-                if deadline_date - today == timedelta(days=7):
-                    for chat_id in chat_ids:
-                        await bot.send_message(
-                            chat_id=chat_id,
-                            text=f"Reminder: 1 week left until {deadline_date} — {name}"
-                        )
+            # Remind 7 days before
+            if deadline_date - today == timedelta(days=7):
+                for chat_id in chat_ids:
+                    await bot.send_message(
+                        chat_id=chat_id,
+                        text=f"📅 <b>Weekly Reminder</b>\n\n⏰ 1 week left until <b>{deadline_date}</b>\n📝 <b>{name}</b>\n\n💡 <i>Time to start planning!</i>"
+                    )
 
-                # Remind 1 day before
-                if deadline_date - today == timedelta(days=1):
-                    for chat_id in chat_ids:
-                        await bot.send_message(
-                            chat_id=chat_id,
-                            text=f"Reminder: Tomorrow is the deadline {deadline_date} — {name}"
-                        )
+            # Remind 1 day before
+            if deadline_date - today == timedelta(days=1):
+                for chat_id in chat_ids:
+                    await bot.send_message(
+                        chat_id=chat_id,
+                        text=f"⚠️ <b>Final Reminder</b>\n\n🚨 Tomorrow is the deadline: <b>{deadline_date}</b>\n📝 <b>{name}</b>\n\n🔥 <i>Last chance to finish!</i>"
+                    )
 
-                elif deadline_date == today:
-                    for chat_id in chat_ids:
-                        await bot.send_message(
-                            chat_id=chat_id,
-                            text=f"Deadline today: {deadline_date} — {name}"
-                        )
-                    delete_row(i)
-                elif today - deadline_date == timedelta(days=1):
-                    for chat_id in chat_ids:
-                        await bot.send_message(
-                            chat_id=chat_id,
-                            text=f"Reminder: Yesterday was the deadline {deadline_date.date()} — {name}\n It will delete now"
-                        )
-                    delete_row(i)
+            elif deadline_date == today:
+                for chat_id in chat_ids:
+                    await bot.send_message(
+                        chat_id=chat_id,
+                        text=f"🚨 <b>DEADLINE TODAY!</b>\n\n📅 <b>{deadline_date}</b>\n📝 <b>{name}</b>\n\n⚡ <i>Submit now!</i>"
+                    )
+            elif today - deadline_date == timedelta(days=1):
+                for chat_id in chat_ids:
+                    await bot.send_message(
+                        chat_id=chat_id,
+                        text=f"🗑️ <b>Deadline Expired</b>\n\n📅 Yesterday was the deadline: <b>{deadline_date}</b>\n📝 <b>{name}</b>\n\n🔄 <i>This task will be deleted now.</i>"
+                    )
+                delete_row(i)
         except Exception as e:
             print("Error parsing record:", record, e)
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
-    await message.answer(f"Hello, {html.bold(html.quote(message.from_user.full_name))}!",reply_markup=get_keyboard([('Deadlines','deadlines'),('See my points','points'),('Notifications','notify'),('Pass','pass')]))
+    welcome_text = f"""
+🎉 <b>Welcome to Deadline Checker Bot!</b> 🎉
+
+Hello, {html.bold(html.quote(message.from_user.full_name))}! 👋
+
+📅 <b>What I can do for you:</b>
+• ⏰ Send daily reminders at <b>12:00 PM</b>
+• 📋 Show all your deadlines
+• 🔔 Enable/disable notifications
+• 📝 View assignments to pass
+• 🗑️ Auto-delete expired deadlines
+
+🚀 <b>Quick Start:</b>
+1️⃣ Click <b>"Notifications"</b> to enable reminders
+2️⃣ Click <b>"Deadlines"</b> to see all tasks
+
+
+<i>I'll remind you 7 days before, 1 day before, on the deadline day, and delete expired tasks automatically!</i>
+"""
+    await message.answer(welcome_text, reply_markup=get_keyboard([('📅 Deadlines','deadlines'),('📊 See my points','points'),('🔔 Notifications','notify'),('📝 Pass','pass')]))
 
 @dp.callback_query(F.data=='points')
 async def points_handler(callback: CallbackQuery):
@@ -93,21 +109,43 @@ async def points_handler(callback: CallbackQuery):
 @dp.callback_query(F.data=='deadlines')
 async def deadlines_handler(callback: CallbackQuery):
     text = all_deadlines(get_all_records())
+    if text.strip():
+        response = f"📅 <b>Your Deadlines:</b>\n\n{text}\n\n⏰ <i>Reminders sent daily at 12:00 PM</i>"
+    else:
+        response = "📅 <b>Your Deadlines:</b>\n\n🎉 <i>No deadlines found! You're all caught up!</i>\n\n⏰ <i>Reminders sent daily at 12:00 PM</i>"
     await callback.message.delete()
-    await callback.message.answer(f"Here are your deadlines:\n{text}", disable_web_page_preview=True)
+    await callback.message.answer(response, disable_web_page_preview=True)
     await callback.answer()
 
 @dp.callback_query(F.data=='notify')
 async def notify_handler(callback: CallbackQuery, state: FSMContext):
-    await callback.message.answer("To enable notifications, please type 'Yes'.")
+    notification_text = """
+🔔 <b>Notification Setup</b>
+
+To enable notifications, please type <b>'Yes'</b>
+
+📱 <b>What you'll receive:</b>
+• ⏰ Daily reminders at 12:00 PM
+• 📅 7 days before deadline
+• ⚠️ 1 day before deadline  
+• 🚨 On deadline day
+• 🗑️ Auto-deletion notice
+
+<i>Type 'Yes' to continue or anything else to cancel.</i>
+"""
+    await callback.message.answer(notification_text)
     await state.set_state(NotificationForm.waiting_for_notification)
     await callback.answer()
 
 @dp.callback_query(F.data=='pass')
 async def pass_task(callback: CallbackQuery):
     text = all_deadlines(get_all_records(),['Name','Pass'])
+    if text.strip():
+        response = f"📝 <b>Works to Pass:</b>\n\n{text}\n\n💪 <i>Keep up the good work!</i>"
+    else:
+        response = "📝 <b>Works to Pass:</b>\n\n🎉 <i>No pending works to pass! Great job!</i>"
     await callback.message.delete()
-    await callback.message.answer(f"Here are your works to pass:\n{text}")
+    await callback.message.answer(response)
     await callback.answer()
 
 
@@ -121,9 +159,34 @@ def is_admin(chat_id):
 @dp.message(F.text=='/add_deadline')
 async def add_deadline_handler(message: Message, state: FSMContext):
     if not is_admin(message.chat.id):
-        await message.answer("You do not have permission to add deadlines. Only admins can use this command.")
+        error_text = """
+❌ <b>Access Denied</b>
+
+🔒 You do not have permission to add deadlines.
+
+👑 <i>Only admins can use this command.</i>
+"""
+        await message.answer(error_text)
         return
-    await message.answer("Please enter the deadline: (DD.MM.YYYY) Subject Link")
+    
+    add_deadline_text = """
+📝 <b>Add New Deadline</b>
+
+Please enter the deadline in the following format:
+
+<code>DD.MM.YYYY Subject Link</code>
+
+<b>Example:</b>
+<code>25.12.2024 Christmas Assignment https://example.com</code>
+
+📋 <b>Required:</b>
+• Date (DD.MM.YYYY)
+• Subject/Description
+• Link (optional but recommended)
+
+<i>Type your deadline details now...</i>
+"""
+    await message.answer(add_deadline_text)
     await state.set_state(DeadlineForm.waiting_for_deadline)
 
 @dp.message(F.text=='/all')
@@ -137,10 +200,31 @@ async def process_deadline(message: Message, state: FSMContext):
     deadline_text = message.text.strip()
     deadline_add = list(map(str, deadline_text.split(' ')))
     if re.match(r'\d{2}.\d{2}.\d{4}', deadline_add[0]) is None or len(deadline_add) < 3:
-        await message.answer("Invalid format. Please use: DD.MM.YYYY Subject Link")
+        error_text = """
+❌ <b>Invalid Format</b>
+
+Please use the correct format:
+<code>DD.MM.YYYY Subject Link</code>
+
+<b>Example:</b>
+<code>25.12.2024 Christmas Assignment https://example.com</code>
+
+📋 <b>Requirements:</b>
+• Date in DD.MM.YYYY format
+• At least 3 words (date + subject + link)
+"""
+        await message.answer(error_text)
         return
+    
     add_row(deadline_add)
-    await message.answer(f"Deadline '{deadline_text}' received and recorded.")
+    success_text = f"""
+✅ <b>Deadline Added Successfully!</b>
+
+📝 <b>Added:</b> <code>{deadline_text}</code>
+
+🎉 <i>The deadline has been recorded and users will receive reminders automatically!</i>
+"""
+    await message.answer(success_text)
     await state.clear()
 
 @dp.message(NotificationForm.waiting_for_notification)
@@ -153,9 +237,29 @@ async def process_notification(message: Message, state: FSMContext):
         if role == 'admin':
             cursor.execute("UPDATE users SET role = 'admin' WHERE chat_id = ?", (message.chat.id,))
         con.commit()
-        await message.answer("Notifications enabled. You will receive reminders about upcoming deadlines.")
+        
+        success_text = f"""
+✅ <b>Notifications Enabled Successfully!</b>
+
+🔔 You will now receive:
+• ⏰ Daily reminders at 12:00 PM
+• 📅 7 days before deadline
+• ⚠️ 1 day before deadline
+• 🚨 On deadline day
+• 🗑️ Auto-deletion notices
+
+🎉 <i>You're all set! I'll keep you updated on your deadlines.</i>
+"""
+        await message.answer(success_text)
     else:
-        await message.answer("Notifications not enabled. You can enable them later by clicking the 'Notifications' button.")
+        cancel_text = """
+❌ <b>Notifications Not Enabled</b>
+
+🔕 You won't receive deadline reminders.
+
+💡 <i>You can enable them later by clicking the '🔔 Notifications' button anytime!</i>
+"""
+        await message.answer(cancel_text)
     await state.clear()
 
 @dp.message(AllNotify.all_notify)
@@ -173,7 +277,7 @@ async def process_all_notify(message: Message, state: FSMContext):
 
 async def main():
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(check_deadlines, "interval", hours = 1)  # check every day
+    scheduler.add_job(check_deadlines, "cron", hour=11, minute=0)  # check every day at 12:00 PM
     scheduler.start()
     await dp.start_polling(bot)
 
