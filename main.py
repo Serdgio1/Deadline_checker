@@ -92,10 +92,7 @@ Hello, {html.bold(html.quote(message.from_user.full_name))}!
 <b>Quick Start:</b>
 1. Click "Notifications" to enable reminders
 2. Click "Deadlines" to see all tasks
-3. Admins can use /add_deadline to add new deadlines
 
-<b>Format for adding deadlines:</b>
-<code>DD.MM.YYYY Subject Link</code>
 
 <i>I'll remind you 7 days before, 1 day before, on the deadline day, and delete expired tasks automatically.</i>
 """
