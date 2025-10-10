@@ -3,7 +3,7 @@
 # Deadline Checker Bot - Deployment Script
 # This script deploys the bot to your server
 
-echo "🚀 Deadline Checker Bot - Server Deployment"
+echo "Deadline Checker Bot - Server Deployment"
 echo "============================================="
 
 # Configuration - UPDATE THESE VALUES FOR YOUR SERVER
@@ -132,7 +132,7 @@ print_status "Step 7: Showing recent logs..."
 $SSH_CMD "cd $SERVER_PATH && docker-compose logs --tail=20"
 
 echo ""
-print_success "🎉 Deployment completed!"
+print_success "Deployment completed!"
 echo ""
 print_status "Useful commands for server management:"
 echo "  View logs:      $SSH_CMD 'cd $SERVER_PATH && docker-compose logs -f'"
