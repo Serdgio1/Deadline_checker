@@ -5,3 +5,6 @@ __pycache__/
 config.py 
 .env
 bot_data.db
+
+# Security: Don't commit actual server configuration
+deploy-config.sh

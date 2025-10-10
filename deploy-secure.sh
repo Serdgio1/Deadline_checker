@@ -1,17 +1,29 @@
 #!/bin/bash
 
-# Deadline Checker Bot - Deployment Script
-# This script deploys the bot to your server
+# Deadline Checker Bot - Secure Deployment Script
+# This script uses a separate config file for server details (not committed to git)
 
-echo "🚀 Deadline Checker Bot - Server Deployment"
+echo "🚀 Deadline Checker Bot - Secure Deployment"
 echo "============================================="
 
-# Configuration - UPDATE THESE VALUES FOR YOUR SERVER
-SERVER_USER="root"
-SERVER_HOST="YOUR_SERVER_IP_HERE"
-SERVER_PATH="/root/itmo_bot/Deadline_checker"
-USE_PASSWORD="true"  # Set to "true" if using password authentication
-SSH_KEY_PATH="~/.ssh/your_key"  # Optional: specify SSH key path (ignored if USE_PASSWORD="true")
+# Check if config file exists
+if [ ! -f "deploy-config.sh" ]; then
+    echo "❌ Configuration file not found!"
+    echo ""
+    echo "📋 Setup instructions:"
+    echo "1. Copy the example config: cp deploy-config.example deploy-config.sh"
+    echo "2. Edit deploy-config.sh with your server details:"
+    echo "   - SERVER_HOST: Your server IP address"
+    echo "   - SERVER_USER: Your server username"
+    echo "   - SERVER_PATH: Path to your project on server"
+    echo "   - USE_PASSWORD: Authentication method"
+    echo ""
+    echo "⚠️  deploy-config.sh is ignored by git for security reasons"
+    exit 1
+fi
+
+# Load configuration
+source deploy-config.sh
 
 # Colors for output
 RED='\033[0;31m'
@@ -20,7 +32,6 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Function to print colored output
 print_status() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
@@ -37,36 +48,19 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Check if required variables are set
-if [ "$SERVER_USER" = "your_username" ] || [ "$SERVER_HOST" = "your_server_ip_or_domain" ] || [ "$SERVER_PATH" = "/path/to/your/project" ]; then
-    print_error "Please update the configuration variables at the top of this script!"
-    print_status "Edit deploy.sh and set:"
-    echo "  - SERVER_USER: Your server username"
-    echo "  - SERVER_HOST: Your server IP or domain"
-    echo "  - SERVER_PATH: Path where project will be deployed"
-    echo "  - USE_PASSWORD: Set to 'true' if using password authentication"
-    echo "  - SSH_KEY_PATH: Path to your SSH key (optional, ignored if USE_PASSWORD='true')"
+# Validate configuration
+if [ "$SERVER_HOST" = "YOUR_SERVER_IP_HERE" ] || [ -z "$SERVER_HOST" ]; then
+    print_error "Please update deploy-config.sh with your actual server IP address!"
     exit 1
 fi
 
-# Set up SSH commands based on authentication method
-if [ "$USE_PASSWORD" = "true" ]; then
-    print_status "Using password authentication"
-    SSH_CMD="ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST"
-    SCP_CMD="scp -o StrictHostKeyChecking=no"
-else
-    # Check if SSH key is provided and exists
-    if [ "$SSH_KEY_PATH" != "~/.ssh/your_key" ] && [ ! -f "${SSH_KEY_PATH/#\~/$HOME}" ]; then
-        print_warning "SSH key not found at $SSH_KEY_PATH, using default SSH authentication"
-        SSH_CMD="ssh $SERVER_USER@$SERVER_HOST"
-        SCP_CMD="scp"
-    else
-        SSH_CMD="ssh -i $SSH_KEY_PATH $SERVER_USER@$SERVER_HOST"
-        SCP_CMD="scp -i $SSH_KEY_PATH"
-    fi
-fi
+print_status "Deploying to $SERVER_USER@$SERVER_HOST:$SERVER_PATH"
 
-print_status "Starting deployment to $SERVER_USER@$SERVER_HOST:$SERVER_PATH"
+if [ "$USE_PASSWORD" = "true" ]; then
+    print_warning "Using password authentication - you will be prompted for your password"
+else
+    print_status "Using SSH key authentication"
+fi
 
 # Step 1: Push to git repository
 print_status "Step 1: Pushing changes to git repository..."
@@ -76,6 +70,13 @@ if [ $? -eq 0 ]; then
 else
     print_error "Failed to push to git repository"
     exit 1
+fi
+
+# Set up SSH commands based on authentication method
+if [ "$USE_PASSWORD" = "true" ]; then
+    SSH_CMD="ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST"
+else
+    SSH_CMD="ssh -i $SSH_KEY_PATH $SERVER_USER@$SERVER_HOST"
 fi
 
 # Step 2: Connect to server and pull changes

@@ -6,9 +6,9 @@
 echo "🚀 Deadline Checker Bot - Password Deployment"
 echo "=============================================="
 
-# Configuration
+# Configuration - UPDATE THESE VALUES FOR YOUR SERVER
 SERVER_USER="root"
-SERVER_HOST="88.218.122.148"
+SERVER_HOST="YOUR_SERVER_IP_HERE"
 SERVER_PATH="/root/itmo_bot/Deadline_checker"
 
 # Colors for output

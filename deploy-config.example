@@ -1,0 +1,15 @@
+# Deadline Checker Bot - Deployment Configuration Example
+# Copy this file to deploy-config.sh and fill in your actual server details
+# deploy-config.sh is ignored by git for security reasons
+
+# Your server configuration
+SERVER_USER="root"
+SERVER_HOST="13.132.123.232" 
+SERVER_PATH="PATH"
+
+# Authentication method
+USE_PASSWORD="true"  # Set to "true" for password, "false" for SSH key
+SSH_KEY_PATH="~/.ssh/your_private_key"  # Only used if USE_PASSWORD="false"
+
+# Optional: Server description (for documentation only)
+SERVER_DESCRIPTION="Production server for Deadline Checker Bot"

@@ -26,7 +26,7 @@ Your local container has been stopped and all changes have been pushed to your g
 
    ```bash
    SERVER_USER="root"
-   SERVER_HOST="88.218.122.148"
+   SERVER_HOST="YOUR_SERVER_IP_HERE"
    SERVER_PATH="/root/itmo_bot/Deadline_checker"
    USE_PASSWORD="false"  # Set to "false" for SSH key authentication
    SSH_KEY_PATH="~/.ssh/your_private_key"
