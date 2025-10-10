@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from pydoc import text
 import sys
 import sqlite3
 import re
@@ -24,7 +23,7 @@ BOT_TOKEN = os.getenv('BOT_TOKEN')
 
 dp = Dispatcher()
 router = Router()
-bot = Bot(token=BOT_TOKEN,default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
 class DeadlineForm(StatesGroup):
     waiting_for_deadline = State()
@@ -40,38 +39,37 @@ async def check_deadlines():
     today = datetime.today().date()
     cursor.execute("SELECT chat_id FROM users")
     chat_ids = [row[0] for row in cursor.fetchall() if row[0]]
+    
     for i, record in enumerate(records, start=2):
         try:
-            # Assuming date is stored in column "Deadline" as "DD.MM.YYYY"
             deadline_date = datetime.strptime(record["Deadline"], "%d.%m.%Y").date()
             name = record.get("Name", "No description")
-            # Remind 7 days before
+            
             if deadline_date - today == timedelta(days=7):
                 for chat_id in chat_ids:
                     await bot.send_message(
                         chat_id=chat_id,
-                        text=f"📅 <b>Weekly Reminder</b>\n\n⏰ 1 week left until <b>{deadline_date}</b>\n📝 <b>{name}</b>\n\n💡 <i>Time to start planning!</i>"
+                        text=f"<b>Weekly Reminder</b>\n\n1 week left until <b>{deadline_date}</b>\n<b>{name}</b>\n\n<i>Time to start planning!</i>"
                     )
 
-            # Remind 1 day before
             if deadline_date - today == timedelta(days=1):
                 for chat_id in chat_ids:
                     await bot.send_message(
                         chat_id=chat_id,
-                        text=f"⚠️ <b>Final Reminder</b>\n\n🚨 Tomorrow is the deadline: <b>{deadline_date}</b>\n📝 <b>{name}</b>\n\n🔥 <i>Last chance to finish!</i>"
+                        text=f"<b>Final Reminder</b>\n\nTomorrow is the deadline: <b>{deadline_date}</b>\n<b>{name}</b>\n\n<i>Last chance to finish!</i>"
                     )
 
             elif deadline_date == today:
                 for chat_id in chat_ids:
                     await bot.send_message(
                         chat_id=chat_id,
-                        text=f"🚨 <b>DEADLINE TODAY!</b>\n\n📅 <b>{deadline_date}</b>\n📝 <b>{name}</b>\n\n⚡ <i>Submit now!</i>"
+                        text=f"<b>DEADLINE TODAY!</b>\n\n<b>{deadline_date}</b>\n<b>{name}</b>\n\n<i>Submit now!</i>"
                     )
             elif today - deadline_date == timedelta(days=1):
                 for chat_id in chat_ids:
                     await bot.send_message(
                         chat_id=chat_id,
-                        text=f"🗑️ <b>Deadline Expired</b>\n\n📅 Yesterday was the deadline: <b>{deadline_date}</b>\n📝 <b>{name}</b>\n\n🔄 <i>This task will be deleted now.</i>"
+                        text=f"<b>Deadline Expired</b>\n\nYesterday was the deadline: <b>{deadline_date}</b>\n<b>{name}</b>\n\n<i>This task will be deleted now.</i>"
                     )
                 delete_row(i)
         except Exception as e:
@@ -80,39 +78,42 @@ async def check_deadlines():
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
     welcome_text = f"""
-🎉 <b>Welcome to Deadline Checker Bot!</b> 🎉
+<b>Welcome to Deadline Checker Bot</b>
 
-Hello, {html.bold(html.quote(message.from_user.full_name))}! 👋
+Hello, {html.bold(html.quote(message.from_user.full_name))}!
 
-📅 <b>What I can do for you:</b>
-• ⏰ Send daily reminders at <b>12:00 PM</b>
-• 📋 Show all your deadlines
-• 🔔 Enable/disable notifications
-• 📝 View assignments to pass
-• 🗑️ Auto-delete expired deadlines
+<b>Features:</b>
+• Send daily reminders at 12:00 PM
+• Show all your deadlines
+• Enable/disable notifications
+• View assignments to pass
+• Auto-delete expired deadlines
 
-🚀 <b>Quick Start:</b>
-1️⃣ Click <b>"Notifications"</b> to enable reminders
-2️⃣ Click <b>"Deadlines"</b> to see all tasks
+<b>Quick Start:</b>
+1. Click "Notifications" to enable reminders
+2. Click "Deadlines" to see all tasks
+3. Admins can use /add_deadline to add new deadlines
 
+<b>Format for adding deadlines:</b>
+<code>DD.MM.YYYY Subject Link</code>
 
-<i>I'll remind you 7 days before, 1 day before, on the deadline day, and delete expired tasks automatically!</i>
+<i>I'll remind you 7 days before, 1 day before, on the deadline day, and delete expired tasks automatically.</i>
 """
-    await message.answer(welcome_text, reply_markup=get_keyboard([('📅 Deadlines','deadlines'),('📊 See my points','points'),('🔔 Notifications','notify'),('📝 Pass','pass')]))
+    await message.answer(welcome_text, reply_markup=get_keyboard([('Deadlines','deadlines'),('See my points','points'),('Notifications','notify'),('Pass','pass')]))
 
 @dp.callback_query(F.data=='points')
 async def points_handler(callback: CallbackQuery):
     await callback.message.delete()
-    await callback.message.answer("That doesn't work. Wait for a new release.")
+    await callback.message.answer("This feature is not available yet. Please wait for the next release.")
     await callback.answer()
 
 @dp.callback_query(F.data=='deadlines')
 async def deadlines_handler(callback: CallbackQuery):
     text = all_deadlines(get_all_records())
     if text.strip():
-        response = f"📅 <b>Your Deadlines:</b>\n\n{text}\n\n⏰ <i>Reminders sent daily at 12:00 PM</i>"
+        response = f"<b>Your Deadlines:</b>\n\n{text}\n\n<i>Reminders sent daily at 12:00 PM</i>"
     else:
-        response = "📅 <b>Your Deadlines:</b>\n\n🎉 <i>No deadlines found! You're all caught up!</i>\n\n⏰ <i>Reminders sent daily at 12:00 PM</i>"
+        response = "<b>Your Deadlines:</b>\n\n<i>No deadlines found! You're all caught up!</i>\n\n<i>Reminders sent daily at 12:00 PM</i>"
     await callback.message.delete()
     await callback.message.answer(response, disable_web_page_preview=True)
     await callback.answer()
@@ -120,16 +121,16 @@ async def deadlines_handler(callback: CallbackQuery):
 @dp.callback_query(F.data=='notify')
 async def notify_handler(callback: CallbackQuery, state: FSMContext):
     notification_text = """
-🔔 <b>Notification Setup</b>
+<b>Notification Setup</b>
 
-To enable notifications, please type <b>'Yes'</b>
+To enable notifications, please type 'Yes'
 
-📱 <b>What you'll receive:</b>
-• ⏰ Daily reminders at 12:00 PM
-• 📅 7 days before deadline
-• ⚠️ 1 day before deadline  
-• 🚨 On deadline day
-• 🗑️ Auto-deletion notice
+<b>What you'll receive:</b>
+• Daily reminders at 12:00 PM
+• 7 days before deadline
+• 1 day before deadline  
+• On deadline day
+• Auto-deletion notice
 
 <i>Type 'Yes' to continue or anything else to cancel.</i>
 """
@@ -141,16 +142,13 @@ To enable notifications, please type <b>'Yes'</b>
 async def pass_task(callback: CallbackQuery):
     text = all_deadlines(get_all_records(),['Name','Pass'])
     if text.strip():
-        response = f"📝 <b>Works to Pass:</b>\n\n{text}\n\n💪 <i>Keep up the good work!</i>"
+        response = f"<b>Works to Pass:</b>\n\n{text}\n\n<i>Keep up the good work!</i>"
     else:
-        response = "📝 <b>Works to Pass:</b>\n\n🎉 <i>No pending works to pass! Great job!</i>"
+        response = "<b>Works to Pass:</b>\n\n<i>No pending works to pass! Great job!</i>"
     await callback.message.delete()
     await callback.message.answer(response)
     await callback.answer()
 
-
-
-# Helper function to check if user is admin
 def is_admin(chat_id):
     cursor.execute("SELECT role FROM users WHERE chat_id = ?", (chat_id,))
     row = cursor.fetchone()
@@ -160,17 +158,17 @@ def is_admin(chat_id):
 async def add_deadline_handler(message: Message, state: FSMContext):
     if not is_admin(message.chat.id):
         error_text = """
-❌ <b>Access Denied</b>
+<b>Access Denied</b>
 
-🔒 You do not have permission to add deadlines.
+You do not have permission to add deadlines.
 
-👑 <i>Only admins can use this command.</i>
+<i>Only admins can use this command.</i>
 """
         await message.answer(error_text)
         return
     
     add_deadline_text = """
-📝 <b>Add New Deadline</b>
+<b>Add New Deadline</b>
 
 Please enter the deadline in the following format:
 
@@ -179,7 +177,7 @@ Please enter the deadline in the following format:
 <b>Example:</b>
 <code>25.12.2024 Christmas Assignment https://example.com</code>
 
-📋 <b>Required:</b>
+<b>Required:</b>
 • Date (DD.MM.YYYY)
 • Subject/Description
 • Link (optional but recommended)
@@ -201,7 +199,7 @@ async def process_deadline(message: Message, state: FSMContext):
     deadline_add = list(map(str, deadline_text.split(' ')))
     if re.match(r'\d{2}.\d{2}.\d{4}', deadline_add[0]) is None or len(deadline_add) < 3:
         error_text = """
-❌ <b>Invalid Format</b>
+<b>Invalid Format</b>
 
 Please use the correct format:
 <code>DD.MM.YYYY Subject Link</code>
@@ -209,7 +207,7 @@ Please use the correct format:
 <b>Example:</b>
 <code>25.12.2024 Christmas Assignment https://example.com</code>
 
-📋 <b>Requirements:</b>
+<b>Requirements:</b>
 • Date in DD.MM.YYYY format
 • At least 3 words (date + subject + link)
 """
@@ -218,11 +216,11 @@ Please use the correct format:
     
     add_row(deadline_add)
     success_text = f"""
-✅ <b>Deadline Added Successfully!</b>
+<b>Deadline Added Successfully!</b>
 
-📝 <b>Added:</b> <code>{deadline_text}</code>
+<b>Added:</b> <code>{deadline_text}</code>
 
-🎉 <i>The deadline has been recorded and users will receive reminders automatically!</i>
+<i>The deadline has been recorded and users will receive reminders automatically!</i>
 """
     await message.answer(success_text)
     await state.clear()
@@ -233,31 +231,30 @@ async def process_notification(message: Message, state: FSMContext):
         role = 'admin' if message.from_user.username == 'Sergio_Suprun' else 'user'
         cursor.execute("INSERT OR IGNORE INTO users (chat_id, username, role) VALUES (?, ?, ?)", 
                        (message.chat.id, message.from_user.username, role))
-        # If user already exists, update role if needed
         if role == 'admin':
             cursor.execute("UPDATE users SET role = 'admin' WHERE chat_id = ?", (message.chat.id,))
         con.commit()
         
         success_text = f"""
-✅ <b>Notifications Enabled Successfully!</b>
+<b>Notifications Enabled Successfully!</b>
 
-🔔 You will now receive:
-• ⏰ Daily reminders at 12:00 PM
-• 📅 7 days before deadline
-• ⚠️ 1 day before deadline
-• 🚨 On deadline day
-• 🗑️ Auto-deletion notices
+<b>You will now receive:</b>
+• Daily reminders at 12:00 PM
+• 7 days before deadline
+• 1 day before deadline
+• On deadline day
+• Auto-deletion notices
 
-🎉 <i>You're all set! I'll keep you updated on your deadlines.</i>
+<i>You're all set! I'll keep you updated on your deadlines.</i>
 """
         await message.answer(success_text)
     else:
         cancel_text = """
-❌ <b>Notifications Not Enabled</b>
+<b>Notifications Not Enabled</b>
 
-🔕 You won't receive deadline reminders.
+You won't receive deadline reminders.
 
-💡 <i>You can enable them later by clicking the '🔔 Notifications' button anytime!</i>
+<i>You can enable them later by clicking the 'Notifications' button anytime!</i>
 """
         await message.answer(cancel_text)
     await state.clear()
@@ -277,7 +274,7 @@ async def process_all_notify(message: Message, state: FSMContext):
 
 async def main():
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(check_deadlines, "cron", hour=11, minute=0)  # check every day at 12:00 PM
+    scheduler.add_job(check_deadlines, "cron", hour=12, minute=0)
     scheduler.start()
     await dp.start_polling(bot)
 
@@ -295,5 +292,3 @@ if __name__=='__main__':
     con.commit()
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     asyncio.run(main())
-    main()
-

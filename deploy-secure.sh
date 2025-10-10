@@ -1,16 +1,12 @@
 #!/bin/bash
 
-# Deadline Checker Bot - Secure Deployment Script
-# This script uses a separate config file for server details (not committed to git)
+echo "Deadline Checker Bot - Secure Deployment"
+echo "========================================"
 
-echo "🚀 Deadline Checker Bot - Secure Deployment"
-echo "============================================="
-
-# Check if config file exists
 if [ ! -f "deploy-config.sh" ]; then
-    echo "❌ Configuration file not found!"
+    echo "Configuration file not found!"
     echo ""
-    echo "📋 Setup instructions:"
+    echo "Setup instructions:"
     echo "1. Copy the example config: cp deploy-config.example deploy-config.sh"
     echo "2. Edit deploy-config.sh with your server details:"
     echo "   - SERVER_HOST: Your server IP address"
@@ -18,19 +14,17 @@ if [ ! -f "deploy-config.sh" ]; then
     echo "   - SERVER_PATH: Path to your project on server"
     echo "   - USE_PASSWORD: Authentication method"
     echo ""
-    echo "⚠️  deploy-config.sh is ignored by git for security reasons"
+    echo "deploy-config.sh is ignored by git for security reasons"
     exit 1
 fi
 
-# Load configuration
 source deploy-config.sh
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 print_status() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -48,7 +42,6 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Validate configuration
 if [ "$SERVER_HOST" = "YOUR_SERVER_IP_HERE" ] || [ -z "$SERVER_HOST" ]; then
     print_error "Please update deploy-config.sh with your actual server IP address!"
     exit 1
@@ -62,7 +55,6 @@ else
     print_status "Using SSH key authentication"
 fi
 
-# Step 1: Push to git repository
 print_status "Step 1: Pushing changes to git repository..."
 git push origin develop
 if [ $? -eq 0 ]; then
@@ -72,14 +64,12 @@ else
     exit 1
 fi
 
-# Set up SSH commands based on authentication method
 if [ "$USE_PASSWORD" = "true" ]; then
     SSH_CMD="ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST"
 else
     SSH_CMD="ssh -i $SSH_KEY_PATH $SERVER_USER@$SERVER_HOST"
 fi
 
-# Step 2: Connect to server and pull changes
 print_status "Step 2: Connecting to server and updating code..."
 $SSH_CMD "cd $SERVER_PATH && git pull origin develop"
 if [ $? -eq 0 ]; then
@@ -89,7 +79,6 @@ else
     exit 1
 fi
 
-# Step 3: Check if Docker is running on server
 print_status "Step 3: Checking Docker status on server..."
 $SSH_CMD "docker --version > /dev/null 2>&1"
 if [ $? -eq 0 ]; then
@@ -100,7 +89,6 @@ else
     exit 1
 fi
 
-# Step 4: Stop existing containers
 print_status "Step 4: Stopping existing containers..."
 $SSH_CMD "cd $SERVER_PATH && docker-compose down"
 if [ $? -eq 0 ]; then
@@ -109,7 +97,6 @@ else
     print_warning "No existing containers to stop or failed to stop them"
 fi
 
-# Step 5: Build and start new containers
 print_status "Step 5: Building and starting new containers..."
 $SSH_CMD "cd $SERVER_PATH && docker-compose build --no-cache && docker-compose up -d"
 if [ $? -eq 0 ]; then
@@ -119,7 +106,6 @@ else
     exit 1
 fi
 
-# Step 6: Check container status
 print_status "Step 6: Checking container status..."
 $SSH_CMD "cd $SERVER_PATH && docker-compose ps"
 if [ $? -eq 0 ]; then
@@ -128,12 +114,11 @@ else
     print_warning "Deployment completed but couldn't verify container status"
 fi
 
-# Step 7: Show logs
 print_status "Step 7: Showing recent logs..."
 $SSH_CMD "cd $SERVER_PATH && docker-compose logs --tail=20"
 
 echo ""
-print_success "🎉 Deployment completed!"
+print_success "Deployment completed!"
 echo ""
 print_status "Useful commands for server management:"
 echo "  View logs:      $SSH_CMD 'cd $SERVER_PATH && docker-compose logs -f'"

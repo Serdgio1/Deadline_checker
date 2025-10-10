@@ -1,7 +1,5 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-
-
 def get_keyboard(buttons):
     keyboard = []
     for btn in buttons:
@@ -28,5 +26,3 @@ def all_deadlines(records, fields=['Deadline', 'Name', 'Link']):
             res += f"{count}. {' '.join(values)}\n"
             count += 1
     return res
-
-

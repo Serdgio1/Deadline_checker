@@ -4,7 +4,7 @@ A Telegram bot that helps you manage and track deadlines by integrating with Goo
 
 ## Features
 
-- **Automated Reminders**: Sends notifications at **12:00 PM** daily for:
+- **Automated Reminders**: Sends notifications at 12:00 PM daily for:
   - 7 days before deadline
   - 1 day before deadline
   - On the deadline day
@@ -17,7 +17,7 @@ A Telegram bot that helps you manage and track deadlines by integrating with Goo
 ## Prerequisites
 
 - Python 3.8+
-- Telegram Bot Token (from [@BotFather](https://t.me/BotFather))
+- Telegram Bot Token (from @BotFather)
 - Google Sheets API credentials
 - Docker (optional, for containerized deployment)
 
@@ -42,7 +42,7 @@ BOT_TOKEN=your_telegram_bot_token_here
    - `Pass` (optional additional field)
 
 3. Download Google Sheets API credentials:
-   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Go to Google Cloud Console
    - Create a new project or select existing one
    - Enable Google Sheets API
    - Create credentials (Service Account)
@@ -103,12 +103,12 @@ Example:
 
 ### Notification System
 
-The bot automatically sends reminders at **12:00 PM** daily:
+The bot automatically sends reminders at 12:00 PM daily:
 
-- **7 days before**: "Reminder: 1 week left until [date] — [task]"
-- **1 day before**: "Reminder: Tomorrow is the deadline [date] — [task]"
-- **On deadline day**: "Deadline today: [date] — [task]"
-- **1 day after**: "Reminder: Yesterday was the deadline [date] — [task]. It will delete now"
+- **7 days before**: "Weekly Reminder: 1 week left until [date] — [task]"
+- **1 day before**: "Final Reminder: Tomorrow is the deadline [date] — [task]"
+- **On deadline day**: "DEADLINE TODAY: [date] — [task]"
+- **1 day after**: "Deadline Expired: Yesterday was the deadline [date] — [task]. It will delete now"
 
 After the deadline passes, the row is automatically deleted from the Google Sheet.
 
@@ -116,10 +116,10 @@ After the deadline passes, the row is automatically deleted from the Google Shee
 
 ### Reminder Schedule
 
-Reminders are sent daily at **12:00 PM** (configured in `main.py` line 174):
+Reminders are sent daily at 12:00 PM (configured in `main.py`):
 
 ```python
-scheduler.add_job(check_deadlines, "cron", hour=11, minute=0)  # 12:00 PM
+scheduler.add_job(check_deadlines, "cron", hour=12, minute=0)
 ```
 
 ### Admin Access
@@ -165,19 +165,3 @@ CREATE TABLE users (
 ### Logs
 
 The bot logs important events to stdout. Check the console output for debugging information.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## License
-
-This project is open source. Please check the license file for more details.
-
-## Support
-
-For issues and questions, please create an issue in the repository or contact the maintainer.

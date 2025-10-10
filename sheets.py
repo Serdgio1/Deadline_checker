@@ -30,6 +30,7 @@ def get_all_records(retries=3):
                 pass
             else:
                 return None
+
 def delete_row(row_number, retries=3):
     for attempt in range(retries):
         try:
