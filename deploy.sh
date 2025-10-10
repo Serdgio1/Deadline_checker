@@ -7,10 +7,11 @@ echo "🚀 Deadline Checker Bot - Server Deployment"
 echo "============================================="
 
 # Configuration - UPDATE THESE VALUES
-SERVER_USER="your_username"
-SERVER_HOST="your_server_ip_or_domain"
-SERVER_PATH="/path/to/your/project"
-SSH_KEY_PATH="~/.ssh/your_key"  # Optional: specify SSH key path
+SERVER_USER="root"
+SERVER_HOST="88.218.122.148"
+SERVER_PATH="/root/itmo_bot/Deadline_checker"
+USE_PASSWORD="true"  # Set to "true" if using password authentication
+SSH_KEY_PATH="~/.ssh/your_key"  # Optional: specify SSH key path (ignored if USE_PASSWORD="true")
 
 # Colors for output
 RED='\033[0;31m'
@@ -43,18 +44,26 @@ if [ "$SERVER_USER" = "your_username" ] || [ "$SERVER_HOST" = "your_server_ip_or
     echo "  - SERVER_USER: Your server username"
     echo "  - SERVER_HOST: Your server IP or domain"
     echo "  - SERVER_PATH: Path where project will be deployed"
-    echo "  - SSH_KEY_PATH: Path to your SSH key (optional)"
+    echo "  - USE_PASSWORD: Set to 'true' if using password authentication"
+    echo "  - SSH_KEY_PATH: Path to your SSH key (optional, ignored if USE_PASSWORD='true')"
     exit 1
 fi
 
-# Check if SSH key is provided and exists
-if [ "$SSH_KEY_PATH" != "~/.ssh/your_key" ] && [ ! -f "${SSH_KEY_PATH/#\~/$HOME}" ]; then
-    print_warning "SSH key not found at $SSH_KEY_PATH, using default SSH authentication"
-    SSH_CMD="ssh $SERVER_USER@$SERVER_HOST"
-    SCP_CMD="scp"
+# Set up SSH commands based on authentication method
+if [ "$USE_PASSWORD" = "true" ]; then
+    print_status "Using password authentication"
+    SSH_CMD="ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST"
+    SCP_CMD="scp -o StrictHostKeyChecking=no"
 else
-    SSH_CMD="ssh -i $SSH_KEY_PATH $SERVER_USER@$SERVER_HOST"
-    SCP_CMD="scp -i $SSH_KEY_PATH"
+    # Check if SSH key is provided and exists
+    if [ "$SSH_KEY_PATH" != "~/.ssh/your_key" ] && [ ! -f "${SSH_KEY_PATH/#\~/$HOME}" ]; then
+        print_warning "SSH key not found at $SSH_KEY_PATH, using default SSH authentication"
+        SSH_CMD="ssh $SERVER_USER@$SERVER_HOST"
+        SCP_CMD="scp"
+    else
+        SSH_CMD="ssh -i $SSH_KEY_PATH $SERVER_USER@$SERVER_HOST"
+        SCP_CMD="scp -i $SSH_KEY_PATH"
+    fi
 fi
 
 print_status "Starting deployment to $SERVER_USER@$SERVER_HOST:$SERVER_PATH"
