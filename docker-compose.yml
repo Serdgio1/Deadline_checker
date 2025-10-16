@@ -8,6 +8,8 @@ services:
     restart: unless-stopped
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
+      - CREDENTIALS_FILE=${CREDENTIALS_FILE}
+      - DATABASE_PATH=${DATABASE_PATH}
     env_file:
       - .env
     volumes:

@@ -1,8 +1,9 @@
 import gspread
 from google.auth.exceptions import TransportError
 from datetime import datetime
+from config import CREDENTIALS_FILE
 
-gc = gspread.service_account(filename='.config/gspread/credentials.json')
+gc = gspread.service_account(filename=CREDENTIALS_FILE)
 sh = gc.open("Deadline_checker")
 worksheet = sh.sheet1
 
