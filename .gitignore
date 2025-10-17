@@ -7,4 +7,4 @@ config.py
 *.db
 logs/
 ENV_EXAMPLE.md
-deploy-config.sh
+deploy-config.sh.config/

@@ -85,6 +85,7 @@ async def check_deadlines():
     for row_number in reversed(rows_to_delete):
         delete_row(row_number)
 
+
 # Queue Management Functions
 def create_queue(queue_name):
     """Create a new queue"""
@@ -364,7 +365,32 @@ async def create_queue_handler(message: Message):
     
     queue_name = parts[1].strip()
     create_queue(queue_name)
-    await message.answer(f"<b>Queue Created!</b>\n\nQueue '<b>{queue_name}</b>' has been created successfully.\n\nUsers can now join using: <code>/join_queue {queue_name}</code>")
+    
+    # Send notification to all users about the new queue
+    cursor.execute("SELECT chat_id FROM users")
+    chat_ids = [row[0] for row in cursor.fetchall() if row[0]]
+    
+    notification_text = f"""
+<b>📋 New Queue Created!</b>
+
+A new queue '<b>{queue_name}</b>' has been created by an admin.
+
+<b>How to join:</b>
+• Use command: <code>/join {queue_name}</code>
+• Or use: <code>/join_queue {queue_name}</code>
+• Or click the "Queues" button in the menu
+
+<i>Join now to be part of the queue!</i>
+"""
+    
+    # Send notification to all users
+    for chat_id in chat_ids:
+        try:
+            await bot.send_message(chat_id=chat_id, text=notification_text)
+        except Exception as e:
+            print(f"Failed to send notification to chat_id {chat_id}: {e}")
+    
+    await message.answer(f"<b>Queue Created!</b>\n\nQueue '<b>{queue_name}</b>' has been created successfully.\n\nAll users have been notified about the new queue.\n\nUsers can now join using: <code>/join_queue {queue_name}</code>")
 
 @dp.message(F.text.startswith('/join_queue'))
 async def join_queue_handler(message: Message):

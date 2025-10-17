@@ -13,7 +13,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./bot_data.db:/app/bot_data.db
+      - ./data/bot_data.db:/app/data/bot_data.db
       - ./.config:/app/.config
       - ./logs:/app/logs
     networks:
@@ -24,7 +24,7 @@ services:
         max-size: "10m"
         max-file: "3"
     healthcheck:
-      test: ["CMD", "python", "-c", "import sqlite3; sqlite3.connect('bot_data.db')"]
+      test: ["CMD", "python", "-c", "import sqlite3; sqlite3.connect('../data/bot_data.db')"]
       interval: 30s
       timeout: 10s
       retries: 3
