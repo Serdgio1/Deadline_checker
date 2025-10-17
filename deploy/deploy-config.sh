@@ -2,9 +2,9 @@
 # This file is NOT committed to git for security reasons
 
 # Your server configuration
-SERVER_USER="root"
-SERVER_HOST="88.218.122.148"
-SERVER_PATH="/root/itmo_bot/Deadline_checker"
+SERVER_USER="user"
+SERVER_HOST="111.111.111.111"
+SERVER_PATH="PATH"
 
 # Authentication method
 USE_PASSWORD="true"  # Set to "true" for password, "false" for SSH key
