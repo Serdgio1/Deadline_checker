@@ -17,7 +17,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dotenv import load_dotenv
 from utilities import get_keyboard, all_deadlines
 from sheets import get_all_records, add_row, delete_row
-from config import DATABASE_PATH, ADMIN_USERNAMES
+from os import getenv
 
 load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN')
@@ -304,7 +304,7 @@ async def queues_handler(callback: CallbackQuery):
 
 def is_admin(chat_id, username=None):
     # Check if user is in admin usernames list from environment
-    if username and username in ADMIN_USERNAMES:
+    if username and username in getenv("ADMIN_USERNAMES").split(','):
         return True
     
     # Check database role
@@ -505,7 +505,7 @@ async def admin_info_handler(message: Message):
         await message.answer("<b>Access Denied</b>\n\nOnly admins can view admin information.")
         return
     
-    admin_list = ", ".join(ADMIN_USERNAMES) if ADMIN_USERNAMES else "None configured"
+    admin_list = ", ".join(getenv("ADMIN_USERNAMES").split(',')) if getenv("ADMIN_USERNAMES") else "None configured"
     response = f"""
 <b>Admin Configuration</b>
 
@@ -734,7 +734,7 @@ Please use the correct format:
 @dp.message(NotificationForm.waiting_for_notification)
 async def process_notification(message: Message, state: FSMContext):
     if message.text == 'Yes':
-        role = 'admin' if message.from_user.username in ADMIN_USERNAMES else 'user'
+        role = 'admin' if message.from_user.username in getenv("ADMIN_USERNAMES").split(',') else 'user'
         cursor.execute("INSERT OR IGNORE INTO users (chat_id, username, role) VALUES (?, ?, ?)", 
                        (message.chat.id, message.from_user.username, role))
         if role == 'admin':
@@ -788,7 +788,7 @@ async def main():
     await dp.start_polling(bot)
 
 if __name__=='__main__':
-    con = sqlite3.connect(DATABASE_PATH)
+    con = sqlite3.connect(getenv("DATABASE_PATH"))
     cursor = con.cursor()
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS users (
