@@ -13,7 +13,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./data/bot_data.db:/app/data/bot_data.db
+      - ./data:/app/data
       - ./.config:/app/.config
       - ./logs:/app/logs
     networks:
