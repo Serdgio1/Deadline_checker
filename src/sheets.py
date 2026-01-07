@@ -3,11 +3,23 @@ from google.auth.exceptions import TransportError
 from datetime import datetime
 from os import getenv
 
-gc = gspread.service_account(filename=getenv("CREDENTIALS_FILE"))
+gc = None
+sh = None
+worksheet = None
+
+def _init_sheets():
+    """Initialize Google Sheets connection lazily"""
+    global gc, sh, worksheet
+    if gc is None:
+        credentials_file = getenv("CREDENTIALS_FILE")
+        if not credentials_file:
+            raise ValueError("CREDENTIALS_FILE environment variable is not set")
+        gc = gspread.service_account(filename=credentials_file)
 sh = gc.open("Deadline_checker")
 worksheet = sh.sheet1
 
 def add_row(new_row_data, retries=3):
+    _init_sheets()
     for attempt in range(retries):
         try:
             worksheet.append_row(new_row_data)
@@ -21,6 +33,7 @@ def add_row(new_row_data, retries=3):
                 return False
 
 def get_all_records(retries=3):
+    _init_sheets()
     for attempt in range(retries):
         try:
             records = worksheet.get_all_records()
@@ -33,6 +46,7 @@ def get_all_records(retries=3):
                 return None
 
 def delete_row(row_number, retries=3):
+    _init_sheets()
     for attempt in range(retries):
         try:
             worksheet.delete_rows(row_number)

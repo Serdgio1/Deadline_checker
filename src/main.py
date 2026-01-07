@@ -1,9 +1,9 @@
 import asyncio
 import logging
-import sys
 import sqlite3
 import re
 import os
+import sys
 
 from aiogram import Bot, Dispatcher, Router, F, html
 from aiogram.client.default import DefaultBotProperties
@@ -788,7 +788,12 @@ async def main():
     await dp.start_polling(bot)
 
 if __name__=='__main__':
-    con = sqlite3.connect(getenv("DATABASE_PATH"))
+    database_path = getenv("DATABASE_PATH", "data/bot_data.db")
+    # Ensure the directory exists
+    db_dir = os.path.dirname(database_path)
+    if db_dir and not os.path.exists(db_dir):
+        os.makedirs(db_dir, exist_ok=True)
+    con = sqlite3.connect(database_path)
     cursor = con.cursor()
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS users (

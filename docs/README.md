@@ -21,55 +21,31 @@ A Telegram bot that helps you manage and track deadlines by integrating with Goo
 - Google Sheets API credentials
 - Docker (optional, for containerized deployment)
 
-## Setup
+## Setup (local)
 
-### 1. Environment Setup
-
-Create a `.env` file in the project root:
-
+1) `.env` in project root:
 ```env
 BOT_TOKEN=your_telegram_bot_token_here
+CREDENTIALS_FILE=.config/gspread/credentials.json
+DATABASE_PATH=data/bot_data.db
 ```
 
-### 2. Google Sheets Setup
+2) Google Sheets:
+   - Create sheet `Deadline_checker` with columns: `Deadline`, `Name`, `Link`, `Pass`
+   - Download service-account JSON and place at `.config/gspread/credentials.json`
 
-1. Create a Google Sheet named "Deadline_checker"
-2. Set up the following columns in the first row:
-
-   - `Deadline` (format: DD.MM.YYYY)
-   - `Name` (task/subject description)
-   - `Link` (optional URL)
-   - `Pass` (optional additional field)
-
-3. Download Google Sheets API credentials:
-   - Go to Google Cloud Console
-   - Create a new project or select existing one
-   - Enable Google Sheets API
-   - Create credentials (Service Account)
-   - Download the JSON file
-   - Place it at `.config/gspread/credentials.json`
-
-### 3. Installation
-
-#### Option A: Local Installation
-
+3) Install & run:
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd Deadline_checker
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Run the bot
-python main.py
+python -m src.main
 ```
 
-#### Option B: Docker Installation
+## Setup (Docker)
 
 ```bash
-# Build and run with Docker Compose
-docker-compose up --build
+docker-compose up --build -d   # build + start
+docker-compose logs -f         # tail logs
+docker-compose down            # stop
 ```
 
 ## Usage
@@ -130,15 +106,17 @@ The user with username `Sergio_Suprun` automatically gets admin privileges. Othe
 
 ```
 Deadline_checker/
-├── main.py              # Main bot logic and handlers
-├── sheets.py            # Google Sheets integration
-├── utilities.py         # Helper functions and utilities
-├── config.py            # Configuration settings
-├── requirements.txt     # Python dependencies
-├── docker-compose.yml   # Docker Compose configuration
-├── Dockerfile          # Docker image configuration
-├── bot_data.db         # SQLite database (auto-created)
-└── README.md           # This file
+├── src/
+│   ├── main.py        # bot logic and handlers
+│   ├── sheets.py      # Google Sheets integration
+│   ├── utilities.py   # keyboard helpers
+│   └── config.py      # env loader
+├── requirements.txt   # Python deps
+├── Dockerfile
+├── docker-compose.yml
+├── ENV_EXAMPLE.md
+└── docs/
+    └── README.md      # this file
 ```
 
 ## Database Schema
