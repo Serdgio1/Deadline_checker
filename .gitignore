@@ -1,4 +1,4 @@
-config/
+.config/
 .venv/
 .DS_Store
 __pycache__/
@@ -7,4 +7,4 @@ config.py
 *.db
 logs/
 ENV_EXAMPLE.md
-deploy-config.sh
+deploy/deploy-config.sh

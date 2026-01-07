@@ -16,14 +16,19 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Copy source code
+COPY src/ /app/src/
 
-RUN mkdir -p /app/.config/gspread && \
+# Create necessary directories
+RUN mkdir -p /app/.config/gspread /app/data /app/logs && \
     chown -R appuser:appuser /app
 
 USER appuser
 
+# Set working directory to src for imports
+WORKDIR /app/src
+
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import sqlite3; sqlite3.connect('bot_data.db')" || exit 1
+    CMD python -c "import sqlite3; sqlite3.connect('../data/bot_data.db')" || exit 1
 
 CMD ["python", "main.py"]

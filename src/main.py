@@ -1,9 +1,9 @@
 import asyncio
 import logging
-import sys
 import sqlite3
 import re
 import os
+import sys
 
 from aiogram import Bot, Dispatcher, Router, F, html
 from aiogram.client.default import DefaultBotProperties
@@ -17,7 +17,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dotenv import load_dotenv
 from utilities import get_keyboard, all_deadlines
 from sheets import get_all_records, add_row, delete_row
-from config import DATABASE_PATH, ADMIN_USERNAMES
+from os import getenv
 
 load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN')
@@ -84,6 +84,7 @@ async def check_deadlines():
     
     for row_number in reversed(rows_to_delete):
         delete_row(row_number)
+
 
 # Queue Management Functions
 def create_queue(queue_name):
@@ -303,7 +304,7 @@ async def queues_handler(callback: CallbackQuery):
 
 def is_admin(chat_id, username=None):
     # Check if user is in admin usernames list from environment
-    if username and username in ADMIN_USERNAMES:
+    if username and username in getenv("ADMIN_USERNAMES").split(','):
         return True
     
     # Check database role
@@ -364,7 +365,32 @@ async def create_queue_handler(message: Message):
     
     queue_name = parts[1].strip()
     create_queue(queue_name)
-    await message.answer(f"<b>Queue Created!</b>\n\nQueue '<b>{queue_name}</b>' has been created successfully.\n\nUsers can now join using: <code>/join_queue {queue_name}</code>")
+    
+    # Send notification to all users about the new queue
+    cursor.execute("SELECT chat_id FROM users")
+    chat_ids = [row[0] for row in cursor.fetchall() if row[0]]
+    
+    notification_text = f"""
+<b>📋 New Queue Created!</b>
+
+A new queue '<b>{queue_name}</b>' has been created by an admin.
+
+<b>How to join:</b>
+• Use command: <code>/join {queue_name}</code>
+• Or use: <code>/join_queue {queue_name}</code>
+• Or click the "Queues" button in the menu
+
+<i>Join now to be part of the queue!</i>
+"""
+    
+    # Send notification to all users
+    for chat_id in chat_ids:
+        try:
+            await bot.send_message(chat_id=chat_id, text=notification_text)
+        except Exception as e:
+            print(f"Failed to send notification to chat_id {chat_id}: {e}")
+    
+    await message.answer(f"<b>Queue Created!</b>\n\nQueue '<b>{queue_name}</b>' has been created successfully.\n\nAll users have been notified about the new queue.\n\nUsers can now join using: <code>/join_queue {queue_name}</code>")
 
 @dp.message(F.text.startswith('/join_queue'))
 async def join_queue_handler(message: Message):
@@ -479,7 +505,7 @@ async def admin_info_handler(message: Message):
         await message.answer("<b>Access Denied</b>\n\nOnly admins can view admin information.")
         return
     
-    admin_list = ", ".join(ADMIN_USERNAMES) if ADMIN_USERNAMES else "None configured"
+    admin_list = ", ".join(getenv("ADMIN_USERNAMES").split(',')) if getenv("ADMIN_USERNAMES") else "None configured"
     response = f"""
 <b>Admin Configuration</b>
 
@@ -708,7 +734,7 @@ Please use the correct format:
 @dp.message(NotificationForm.waiting_for_notification)
 async def process_notification(message: Message, state: FSMContext):
     if message.text == 'Yes':
-        role = 'admin' if message.from_user.username in ADMIN_USERNAMES else 'user'
+        role = 'admin' if message.from_user.username in getenv("ADMIN_USERNAMES").split(',') else 'user'
         cursor.execute("INSERT OR IGNORE INTO users (chat_id, username, role) VALUES (?, ?, ?)", 
                        (message.chat.id, message.from_user.username, role))
         if role == 'admin':
@@ -762,7 +788,12 @@ async def main():
     await dp.start_polling(bot)
 
 if __name__=='__main__':
-    con = sqlite3.connect(DATABASE_PATH)
+    database_path = getenv("DATABASE_PATH", "data/bot_data.db")
+    # Ensure the directory exists
+    db_dir = os.path.dirname(database_path)
+    if db_dir and not os.path.exists(db_dir):
+        os.makedirs(db_dir, exist_ok=True)
+    con = sqlite3.connect(database_path)
     cursor = con.cursor()
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS users (
